@@ -1,0 +1,13 @@
+spring:
+    security:
+        oauth2:
+            client:
+                registration:
+                    google:
+                        client-id: SEU_CLIENT_ID_FRONTEND
+                        client-secret: SEU_CLIENT_SECRET_FRONTEND
+                        scope: email, profile
+                        redirect-uri: http://localhost:8080/login/oauth2/code/google
+                resourceserver:
+                    jwt:
+                        issuer-uri: https://accounts.google.com
