@@ -22,8 +22,6 @@ public class User {
 
     private String pictureUrl;
 
-    @Enumerated(EnumType.STRING)
-    private AuthProvider authProvider;
 
     public User() {
     }
@@ -66,14 +64,6 @@ public class User {
 
     public void setPictureUrl(String pictureUrl) {
         this.pictureUrl = pictureUrl;
-    }
-
-    public AuthProvider getAuthProvider() {
-        return authProvider;
-    }
-
-    public void setAuthProvider(AuthProvider authProvider) {
-        this.authProvider = authProvider;
     }
 }
 
