@@ -1,8 +1,9 @@
 package br.thullyoo.gerenciador_estoque_backend.entity;
 
-import br.thullyoo.gerenciador_estoque_backend.entity.enums.AuthProvider;
 import jakarta.persistence.*;
 
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -22,6 +23,8 @@ public class User {
 
     private String pictureUrl;
 
+    @OneToMany(mappedBy = "owner")
+    private Set<Product> productList;
 
     public User() {
     }
