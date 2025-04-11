@@ -1,6 +1,7 @@
 package br.thullyoo.gerenciador_estoque_backend.entity;
 
 import jakarta.persistence.*;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 import java.util.Set;
@@ -67,6 +68,10 @@ public class User {
 
     public void setPictureUrl(String pictureUrl) {
         this.pictureUrl = pictureUrl;
+    }
+
+    public boolean verifyPassword(PasswordEncoder passwordEncoder, String password){
+        return passwordEncoder.matches(password, getPassword());
     }
 }
 
