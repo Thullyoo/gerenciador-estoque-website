@@ -2,6 +2,7 @@ package br.thullyoo.gerenciador_estoque_backend.service;
 
 import br.thullyoo.gerenciador_estoque_backend.dto.request.UserRequest;
 import br.thullyoo.gerenciador_estoque_backend.entity.User;
+import br.thullyoo.gerenciador_estoque_backend.mapper.UserMapper;
 import br.thullyoo.gerenciador_estoque_backend.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,10 +21,7 @@ public class UserService {
     @Transactional
     public User registerUser(UserRequest userRequest) {
 
-        User user = new User();
-        user.setEmail(user.getEmail());
-        user.setPassword(passwordEncoder.encode(userRequest.password()));
-        user.setName(user.getName());
+        User user = UserMapper.toUser(userRequest, passwordEncoder);
 
         return userRepository.save(user);
     }
