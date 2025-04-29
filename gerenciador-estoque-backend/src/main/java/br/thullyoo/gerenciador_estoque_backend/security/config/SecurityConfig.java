@@ -36,7 +36,7 @@ public class SecurityConfig {
                         )
                         .authorizeHttpRequests(auth -> {
                             auth.requestMatchers("/user/register").permitAll()
-                                    .requestMatchers("/user/login").permitAll()
+                                    .requestMatchers("/auth/login").permitAll()
                                     .anyRequest().authenticated();
                         })
                         .addFilterBefore(authFilterToken(), UsernamePasswordAuthenticationFilter.class)
