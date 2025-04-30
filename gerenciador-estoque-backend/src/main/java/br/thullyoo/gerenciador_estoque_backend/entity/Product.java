@@ -72,4 +72,12 @@ public class Product {
     public void setPrice(double price) {
         this.price = price;
     }
+
+    public User getOwner() {
+        return owner;
+    }
+
+    public void setOwner(User owner) {
+        this.owner = owner;
+    }
 }
