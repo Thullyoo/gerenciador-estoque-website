@@ -3,16 +3,18 @@ package br.thullyoo.gerenciador_estoque_backend.mapper;
 import br.thullyoo.gerenciador_estoque_backend.dto.request.ProductRequest;
 import br.thullyoo.gerenciador_estoque_backend.dto.response.ProductResponse;
 import br.thullyoo.gerenciador_estoque_backend.entity.Product;
+import br.thullyoo.gerenciador_estoque_backend.entity.User;
 
 public class ProductMapper {
 
-    public static Product toProduct(ProductRequest productRequest){
+    public static Product toProduct(ProductRequest productRequest, User owner){
         Product product = new Product();
         product.setCode(product.getCode());
         product.setColor(product.getColor());
         product.setMark(product.getMark());
         product.setName(product.getName());
         product.setPrice(product.getPrice());
+        product.setOwner(owner);
         return product;
     }
 
