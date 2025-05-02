@@ -7,6 +7,7 @@ import br.thullyoo.gerenciador_estoque_backend.entity.User;
 import br.thullyoo.gerenciador_estoque_backend.mapper.ProductMapper;
 import br.thullyoo.gerenciador_estoque_backend.repository.ProductRepository;
 import br.thullyoo.gerenciador_estoque_backend.repository.UserRepository;
+import br.thullyoo.gerenciador_estoque_backend.security.jwt.JwtUtils;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -26,9 +27,13 @@ public class ProductService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private JwtUtils jwtUtils;
+
     @Transactional
     public Product registerProduct(ProductRequest productRequest){
-        Product product = ProductMapper.toProduct(productRequest);
+        User user = jwtUtils.getUserByToken();
+        Product product = ProductMapper.toProduct(productRequest, user);
         return productRepository.save(product);
     }
 
