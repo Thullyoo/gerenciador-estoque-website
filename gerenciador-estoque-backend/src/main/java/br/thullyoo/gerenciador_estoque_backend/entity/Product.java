@@ -83,4 +83,12 @@ public class Product {
     public void setOwner(User owner) {
         this.owner = owner;
     }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
 }
