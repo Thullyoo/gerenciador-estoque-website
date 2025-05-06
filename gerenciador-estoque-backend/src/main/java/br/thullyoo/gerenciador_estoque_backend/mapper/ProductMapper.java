@@ -14,6 +14,7 @@ public class ProductMapper {
         product.setMark(productRequest.mark());
         product.setName(productRequest.name());
         product.setPrice(productRequest.price());
+        product.setQuantity(productRequest.quantity());
         product.setOwner(owner);
         return product;
     }

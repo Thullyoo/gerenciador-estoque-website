@@ -3,6 +3,7 @@ package br.thullyoo.gerenciador_estoque_backend.dto.request;
 import jakarta.persistence.Column;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 
 public record ProductRequest(
         @NotBlank(message = "Name is required and cannot be blank")
@@ -15,6 +16,8 @@ public record ProductRequest(
         Long code,
 
         @DecimalMin(value = "0.01", message = "Price must be greater than zero")
-        double price
+        double price,
+
+        int quantity
 ) {
 }
