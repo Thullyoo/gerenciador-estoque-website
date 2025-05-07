@@ -1,6 +1,7 @@
 package br.thullyoo.gerenciador_estoque_backend.service;
 
 import br.thullyoo.gerenciador_estoque_backend.dto.request.SaleItemRequest;
+import br.thullyoo.gerenciador_estoque_backend.dto.response.SaleResponse;
 import br.thullyoo.gerenciador_estoque_backend.entity.Product;
 import br.thullyoo.gerenciador_estoque_backend.entity.Sale;
 import br.thullyoo.gerenciador_estoque_backend.entity.SaleItem;
@@ -76,5 +77,17 @@ public class SaleService {
         sale.setItems(saleItemList);
         sale.setTotalAmount(total);
         saleRepository.save(sale);
+    }
+
+    public List<SaleResponse> listSalesByUser() {
+        User user = jwtUtils.getUserByToken();
+
+        List<Sale> sales = saleRepository.findBySeller(user);
+
+        if (sales.size() <= 0){
+            throw new RuntimeException("User doesn't have a sale");
+        }
+
+        return sales.stream().map(SaleMapper::toSaleResponse).toList();
     }
 }
