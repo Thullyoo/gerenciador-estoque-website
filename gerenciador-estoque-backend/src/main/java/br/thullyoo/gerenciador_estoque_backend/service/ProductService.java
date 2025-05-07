@@ -51,4 +51,17 @@ public class ProductService {
         return products.get().stream().map(ProductMapper::toProductResponse).toList();
     }
 
+    public List<ProductResponse> listProductsByUser() {
+        User user = jwtUtils.getUserByToken();
+
+        Optional<List<Product>> productsList = productRepository.findByOwner(user);
+
+        if (productsList.isEmpty()){
+            throw new RuntimeException("User doesn't have a product");
+        }
+
+        List<ProductResponse> productResponses = productsList.get().stream().map(ProductMapper::toProductResponse).toList();
+
+        return productResponses;
+    }
 }
