@@ -1,6 +1,7 @@
 package br.thullyoo.gerenciador_estoque_backend.service;
 
 import br.thullyoo.gerenciador_estoque_backend.dto.request.SaleItemRequest;
+import br.thullyoo.gerenciador_estoque_backend.dto.response.SaleItemResponse;
 import br.thullyoo.gerenciador_estoque_backend.dto.response.SaleResponse;
 import br.thullyoo.gerenciador_estoque_backend.entity.Product;
 import br.thullyoo.gerenciador_estoque_backend.entity.Sale;
@@ -11,15 +12,23 @@ import br.thullyoo.gerenciador_estoque_backend.repository.ProductRepository;
 import br.thullyoo.gerenciador_estoque_backend.repository.SaleItemRepository;
 import br.thullyoo.gerenciador_estoque_backend.repository.SaleRepository;
 import br.thullyoo.gerenciador_estoque_backend.security.jwt.JwtUtils;
+import com.lowagie.text.Document;
+import com.lowagie.text.Font;
+import com.lowagie.text.FontFactory;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.pdf.PdfWriter;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.security.PrivateKey;
+import java.io.ByteArrayOutputStream;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
+
 
 @Service
 public class SaleService {
@@ -89,5 +98,51 @@ public class SaleService {
         }
 
         return sales.stream().map(SaleMapper::toSaleResponse).toList();
+    }
+
+    public byte[] generateReportOfSales(){
+        try{
+            User user = jwtUtils.getUserByToken();
+
+            Document document = new Document();
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            PdfWriter.getInstance(document, outputStream);
+
+
+            List<SaleResponse> sales = saleRepository.findBySellerAndDateBetween(user, LocalDate.now().atStartOfDay(), LocalDate.now().atTime(LocalTime.MAX)).stream().map(SaleMapper::toSaleResponse).toList();
+            String title = "Relatório de Vendas do dia " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/YYYY"));
+            String content = "";
+
+            if (sales.size() <= 0){
+                content += "Não há vendas no dia: " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/YYYY"));
+            } else{
+                for (SaleResponse saleResponse : sales){
+                    String itens = "";
+                    for (SaleItemResponse saleItemResponse : saleResponse.saleItemResponses()){
+                        itens += saleItemResponse.toString();
+                    }
+
+                    content += "------------------------------------------------------------\n" +
+                            "Data: " + saleResponse.date().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) + ", Total: R$" + saleResponse.total() + "\nProdutos: \n" +  itens;
+                }
+            }
+
+
+
+            document.open();
+
+            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
+            Font bodyFont = FontFactory.getFont(FontFactory.HELVETICA, 12);
+
+            document.add(new Paragraph(title, titleFont));
+            document.add(new Paragraph(content, bodyFont));
+
+            document.close();
+
+            return outputStream.toByteArray();
+
+        }catch (Exception e){
+            throw new RuntimeException("Error on generate PDF: " + e.getMessage());
+        }
     }
 }
