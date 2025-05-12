@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,6 +39,15 @@ public class SaleController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=relatorio.pdf")
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(saleService.generateReportOfSales());
+    }
+
+    @GetMapping("/report/{start}/{end}")
+    public ResponseEntity<byte[]> generateReportOfSales(@PathVariable("start")LocalDateTime start, @PathVariable("end")LocalDateTime end) {
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=relatorio.pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(saleService.generateReportOfSalesByDate(start, end));
     }
 
 }
