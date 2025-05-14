@@ -12,10 +12,7 @@ import br.thullyoo.gerenciador_estoque_backend.repository.ProductRepository;
 import br.thullyoo.gerenciador_estoque_backend.repository.SaleItemRepository;
 import br.thullyoo.gerenciador_estoque_backend.repository.SaleRepository;
 import br.thullyoo.gerenciador_estoque_backend.security.jwt.JwtUtils;
-import com.lowagie.text.Document;
-import com.lowagie.text.Font;
-import com.lowagie.text.FontFactory;
-import com.lowagie.text.Paragraph;
+import com.lowagie.text.*;
 import com.lowagie.text.pdf.PdfWriter;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -100,93 +97,70 @@ public class SaleService {
         return sales.stream().map(SaleMapper::toSaleResponse).toList();
     }
 
-    public byte[] generateReportOfSales(){
-        try{
-            User user = jwtUtils.getUserByToken();
-
-            Document document = new Document();
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            PdfWriter.getInstance(document, outputStream);
-
-
-            List<SaleResponse> sales = saleRepository.findBySellerAndDateBetween(user, LocalDate.now().atStartOfDay(), LocalDate.now().atTime(LocalTime.MAX)).stream().map(SaleMapper::toSaleResponse).toList();
-            String title = "Relatório de Vendas do dia " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/YYYY"));
-            String content = "";
-
-            if (sales.size() <= 0){
-                content += "Não há vendas no dia: " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/YYYY"));
-            } else{
-                for (SaleResponse saleResponse : sales){
-                    String itens = "";
-                    for (SaleItemResponse saleItemResponse : saleResponse.saleItemResponses()){
-                        itens += saleItemResponse.toString();
-                    }
-
-                    content += "------------------------------------------------------------\n" +
-                            "Data: " + saleResponse.date().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) + ", Total: R$" + saleResponse.total() + "\nProdutos: \n" +  itens;
-                }
-            }
-
-
-
-            document.open();
-
-            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
-            Font bodyFont = FontFactory.getFont(FontFactory.HELVETICA, 12);
-
-            document.add(new Paragraph(title, titleFont));
-            document.add(new Paragraph(content, bodyFont));
-
-            document.close();
-
-            return outputStream.toByteArray();
-
-        }catch (Exception e){
-            throw new RuntimeException("Error on generate PDF: " + e.getMessage());
-        }
+    public byte[] generateReportOfSales() {
+        return generateReportOfSalesByDate(LocalDate.now().atStartOfDay(), LocalDate.now().atTime(LocalTime.MAX));
     }
 
-    public byte[] generateReportOfSalesByDate(LocalDateTime start, LocalDateTime end){
-        try{
+    public byte[] generateReportOfSalesByDate(LocalDateTime start, LocalDateTime end) {
+        try {
             User user = jwtUtils.getUserByToken();
 
             Document document = new Document();
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             PdfWriter.getInstance(document, outputStream);
 
-
-            List<SaleResponse> sales = saleRepository.findBySellerAndDateBetween(user, start, end).stream().map(SaleMapper::toSaleResponse).toList();
-            String title = "Relatório de Vendas do dia " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/YYYY"));
-            String content = "";
-
-            if (sales.size() <= 0){
-                content += "Não há vendas no dia: " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/YYYY"));
-            } else{
-                for (SaleResponse saleResponse : sales){
-                    String itens = "";
-                    for (SaleItemResponse saleItemResponse : saleResponse.saleItemResponses()){
-                        itens += saleItemResponse.toString();
-                    }
-
-                    content += "------------------------------------------------------------\n" +
-                            "Data: " + saleResponse.date().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")) + ", Total: R$" + saleResponse.total() + "\nProdutos: \n" +  itens;
-                }
-            }
+            List<SaleResponse> sales = saleRepository.findBySellerAndDateBetween(user, start, end)
+                    .stream().map(SaleMapper::toSaleResponse).toList();
 
             document.open();
 
             Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
-            Font bodyFont = FontFactory.getFont(FontFactory.HELVETICA, 12);
+            Font sectionFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14);
+            Font contentFont = FontFactory.getFont(FontFactory.HELVETICA, 12);
+            Font itemFont = FontFactory.getFont(FontFactory.HELVETICA, 11);
+
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            String formattedStart = start.toLocalDate().format(dateFormatter);
+            String formattedEnd = end.toLocalDate().format(dateFormatter);
+
+            String title;
+            if (start.toLocalDate().equals(end.toLocalDate())) {
+                title = "Relatório de Vendas - " + formattedStart;
+            } else {
+                title = "Relatório de Vendas - De " + formattedStart + " até " + formattedEnd;
+            }
 
             document.add(new Paragraph(title, titleFont));
-            document.add(new Paragraph(content, bodyFont));
+            document.add(Chunk.NEWLINE);
+
+            if (sales.isEmpty()) {
+                document.add(new Paragraph("Não há vendas neste período.", contentFont));
+            } else {
+                for (SaleResponse sale : sales) {
+                    document.add(new Paragraph("Data da Venda: " + sale.date().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")), sectionFont));
+                    document.add(new Paragraph("Total: R$ " + String.format("%.2f", sale.total()), contentFont));
+                    document.add(new Paragraph("Itens:", contentFont));
+                    document.add(Chunk.NEWLINE);
+
+                    for (SaleItemResponse item : sale.saleItemResponses()) {
+                        Paragraph itemParagraph = new Paragraph(String.format(
+                                "  - %s\n    Código: %d\n    Preço Unitário: R$ %.2f\n    Quantidade: %d",
+                                item.name(), item.code(), item.unitPrice(), item.quantity()
+                        ), itemFont);
+                        document.add(itemParagraph);
+                        document.add(Chunk.NEWLINE);
+                    }
+
+                    document.add(new Paragraph("------------------------------------------------------------"));
+                    document.add(Chunk.NEWLINE);
+                }
+            }
 
             document.close();
-
             return outputStream.toByteArray();
 
-        }catch (Exception e){
-            throw new RuntimeException("Error on generate PDF: " + e.getMessage());
+        } catch (Exception e) {
+            throw new RuntimeException("Erro ao gerar PDF: " + e.getMessage());
         }
     }
 }
